@@ -1,0 +1,1257 @@
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { 
+  Calculator, 
+  History, 
+  LayoutDashboard, 
+  CheckCircle2, 
+  XCircle, 
+  TrendingUp, 
+  TrendingDown, 
+  AlertTriangle,
+  Save,
+  Trash2,
+  ArrowRight,
+  Sparkles,
+  Loader2,
+  MessageSquare,
+  Globe,
+  Settings,
+  Github,
+  Cloud,
+  Download,
+  Upload,
+  ExternalLink,
+  Key,
+  Lightbulb,
+  FileText,
+  X,
+  Bell,
+  RefreshCw,
+  Newspaper,
+  ShieldAlert,
+  Filter,
+  Pickaxe,
+  Mail,
+  AtSign,
+  Copy,
+  ClipboardCheck,
+  Clock 
+} from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell
+} from 'recharts';
+
+// --- Dummy Data 1: AI Pharma (Mixed Open/Closed) ---
+const generatePharmaDummyData = () => {
+  const baseDate = new Date('2024-01-10');
+  const trades = [
+    { ticker: "RXRX", setup: "Trend Continuation Breakout", entry: 12.50, stop: 11.25, exit: 15.60, notes: "AI药物研发合作消息公布，突破盘整区，已止盈。" }, 
+    { ticker: "SDGR", setup: "Pullback to 20MA", entry: 30.20, stop: 28.50, exit: 27.80, notes: "软件业务增长放缓，跌破止损。" },
+    { ticker: "LLY", setup: "Trend Continuation Breakout", entry: 650.00, stop: 635.00, exit: null, notes: "减肥药+AI筛选利好，强劲趋势，继续持有。" }, // Open
+    { ticker: "VRTX", setup: "Reversal", entry: 410.50, stop: 400.00, exit: 425.00, notes: "非阿片类止痛药数据积极，底部反转获利。" },
+    { ticker: "NVDA", setup: "Trend Continuation Breakout", entry: 480.00, stop: 465.00, exit: null, notes: "BioNeMo 发布，作为生物科技算力铲子股买入，持仓中。" }, // Open
+    { ticker: "ABBV", setup: "Pullback to 20MA", entry: 165.00, stop: 160.00, exit: 159.00, notes: "由于Botox竞争担忧，未能守住均线。" },
+    { ticker: "RLAY", setup: "IPO Base", entry: 10.80, stop: 9.80, exit: null, notes: "AI蛋白折叠技术突破，成交量放大，目前浮盈。" }, // Open
+    { ticker: "EXAI", setup: "Reversal", entry: 5.50, stop: 5.00, exit: 4.80, notes: "临床数据不及预期，止损离场。" },
+    { ticker: "AMGN", setup: "Consolidation Breakout", entry: 290.00, stop: 282.00, exit: null, notes: "收购消息落地，VCP形态突破，等待目标价。" }, // Open
+    { ticker: "PATH", setup: "Trend Continuation Breakout", entry: 22.50, stop: 20.50, exit: null, notes: "药企自动化流程需求增加，作为AI应用股买入。" }, // Open
+    { ticker: "DNA", setup: "Reversal", entry: 1.20, stop: 1.05, exit: 1.00, notes: "合成生物学平台烧钱过快，抄底失败。" },
+    { ticker: "ISRG", setup: "Pullback to 20MA", entry: 380.00, stop: 370.00, exit: null, notes: "达芬奇机器人AI辅助功能升级，趋势良好。" }, // Open
+    { ticker: "REGN", setup: "Trend Continuation Breakout", entry: 950.00, stop: 920.00, exit: 940.00, notes: "高位震荡，因市场回调提前离场。" },
+    { ticker: "MRNA", setup: "Reversal", entry: 98.00, stop: 92.00, exit: null, notes: "AI癌症疫苗个性化定制利好，超跌反弹中。" }, // Open
+    { ticker: "BIIB", setup: "Pullback to 20MA", entry: 240.00, stop: 230.00, exit: 228.00, notes: "阿尔茨海默药销售疲软，破位。" },
+    { ticker: "TXG", setup: "Consolidation Breakout", entry: 45.00, stop: 41.00, exit: null, notes: "空间生物学新产品发布，机构大量买入，持仓。" }, // Open
+    { ticker: "ILMN", setup: "Reversal", entry: 135.00, stop: 128.00, exit: 142.00, notes: "管理层变动，短期反弹获利。" },
+    { ticker: "PACB", setup: "Trend Continuation Breakout", entry: 6.50, stop: 5.80, exit: 5.50, notes: "长读测序仪销售不及预期，假突破。" },
+    { ticker: "TMO", setup: "Pullback to 20MA", entry: 540.00, stop: 525.00, exit: null, notes: "生命科学工具龙头，稳健回踩买入，长期持有。" }, // Open
+    { ticker: "GOOGL", setup: "Trend Continuation Breakout", entry: 140.00, stop: 135.00, exit: null, notes: "AlphaFold 3 发布，持仓中..." }, // Open
+  ];
+  return processTrades(trades, baseDate);
+};
+
+// --- Dummy Data 2: Mining & Minerals (Mixed Open/Closed) ---
+const generateMiningDummyData = () => {
+  const baseDate = new Date('2024-02-01');
+  const trades = [
+    { ticker: "FCX", setup: "Trend Continuation Breakout", entry: 42.50, stop: 40.00, exit: null, notes: "铜价因供应短缺飙升，龙头股突破，持仓待涨。" }, // Open
+    { ticker: "NEM", setup: "Reversal", entry: 35.20, stop: 33.50, exit: 38.50, notes: "金价反弹，作为避险资产买入，已获利。" },
+    { ticker: "ALB", setup: "Pullback to 20MA", entry: 120.00, stop: 115.00, exit: 112.00, notes: "锂价持续低迷，反弹失败触及止损。" },
+    { ticker: "CLF", setup: "Consolidation Breakout", entry: 18.50, stop: 17.50, exit: null, notes: "基建法案利好钢铁需求，VCP形态突破，持有。" }, // Open
+    { ticker: "MP", setup: "Trend Continuation Breakout", entry: 16.80, stop: 15.50, exit: null, notes: "稀土战略储备政策利好，放量上涨中。" }, // Open
+    { ticker: "AA", setup: "Pullback to 20MA", entry: 32.00, stop: 30.50, exit: 35.00, notes: "铝价企稳，回踩均线获得支撑，短线获利。" },
+    { ticker: "SCCO", setup: "Trend Continuation Breakout", entry: 85.00, stop: 82.00, exit: null, notes: "南方铜业业绩超预期，股息利好，长线持有。" }, // Open
+    { ticker: "LAC", setup: "Reversal", entry: 6.50, stop: 6.00, exit: 5.80, notes: "Thacker Pass 项目延期消息，止损离场。" },
+    { ticker: "RIO", setup: "Consolidation Breakout", entry: 68.00, stop: 66.00, exit: null, notes: "铁矿石需求回暖，全球矿业巨头补涨。" }, // Open
+    { ticker: "VALE", setup: "Pullback to 20MA", entry: 14.50, stop: 13.80, exit: 13.50, notes: "巴西监管罚款传闻，跌破支撑。" },
+    { ticker: "X", setup: "Trend Continuation Breakout", entry: 38.00, stop: 36.00, exit: null, notes: "并购传闻刺激股价大涨，美国钢铁，持仓观察。" }, // Open
+    { ticker: "NUE", setup: "Consolidation Breakout", entry: 175.00, stop: 168.00, exit: null, notes: "电弧炉技术优势，盈利能力强劲，持有。" }, // Open
+    { ticker: "STLD", setup: "Pullback to 20MA", entry: 125.00, stop: 120.00, exit: null, notes: "钢铁板块轮动，低吸成功，目前持仓。" }, // Open
+    { ticker: "TECK", setup: "Reversal", entry: 45.00, stop: 43.00, exit: 42.50, notes: "煤炭业务分拆不确定性，离场观望。" },
+    { ticker: "HBM", setup: "Trend Continuation Breakout", entry: 8.50, stop: 7.80, exit: null, notes: "Hudbay Minerals 铜产量指引上调，突破买入。" }, // Open
+    { ticker: "GOLD", setup: "Pullback to 20MA", entry: 16.50, stop: 15.80, exit: 17.50, notes: "巴里克黄金，地缘政治紧张局势对冲，获利离场。" },
+    { ticker: "AEM", setup: "Trend Continuation Breakout", entry: 55.00, stop: 52.50, exit: 60.00, notes: "优质金矿并购案落地，市场看好，止盈。" },
+    { ticker: "PAAS", setup: "Reversal", entry: 14.00, stop: 13.20, exit: 15.50, notes: "白银跟随黄金补涨，底部放量，获利。" },
+    { ticker: "CDE", setup: "Trend Continuation Breakout", entry: 3.50, stop: 3.20, exit: 3.10, notes: "Coer Mining 成本控制不及预期，假突破。" },
+    { ticker: "BHP", setup: "Trend Continuation Breakout", entry: 60.00, stop: 58.00, exit: null, notes: "必和必拓，看好全球复苏，长期持仓中..." }, // Open
+  ];
+  return processTrades(trades, baseDate);
+};
+
+// Helper to calculate PnL/R for dummy data
+const processTrades = (trades, baseDate) => {
+  return trades.map((t, index) => {
+    const riskAmount = 500;
+    const riskPerShare = t.entry - t.stop;
+    const shares = Math.floor(riskAmount / riskPerShare);
+    const capitalUsed = shares * t.entry;
+    
+    let status = 'Open';
+    let pnl = 0;
+    let rMultiple = 0;
+    
+    // Only calculate PnL and R if trade is closed (exit exists)
+    if (t.exit !== null) {
+      status = 'Closed';
+      pnl = (t.exit - t.entry) * shares;
+      rMultiple = pnl / riskAmount;
+    }
+
+    const tradeDate = new Date(baseDate);
+    tradeDate.setDate(baseDate.getDate() + (index * 2));
+
+    return {
+      id: Date.now() - (trades.length - index) * 100000,
+      date: tradeDate.toISOString().split('T')[0],
+      ticker: t.ticker,
+      setup: t.setup,
+      entry: t.entry,
+      stop: t.stop,
+      riskAmount: riskAmount,
+      shares: shares,
+      capitalUsed: parseFloat(capitalUsed.toFixed(2)),
+      status: status,
+      notes: t.notes,
+      exit: t.exit,
+      pnl: parseFloat(pnl.toFixed(2)),
+      rMultiple: parseFloat(rMultiple.toFixed(2))
+    };
+  }).reverse();
+};
+
+// --- Gemini API Helper (Modified for Search) ---
+const apiKey = ""; // Runtime auto-fill
+
+async function callGemini(prompt, useSearch = false) {
+  try {
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }],
+    };
+
+    // Add Google Search tool if requested
+    if (useSearch) {
+      payload.tools = [{ google_search: {} }];
+    }
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Gemini API Error Detail:", errText);
+      throw new Error(`API call failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "无法生成结果 / No result generated.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "AI 服务暂时不可用 / AI Service unavailable.";
+  }
+}
+
+// --- GitHub API Helpers ---
+async function saveToGist(token, gistId, data) {
+  const filename = "swing_trades_data.json";
+  const content = JSON.stringify(data, null, 2);
+  const headers = {
+    "Authorization": `token ${token}`,
+    "Accept": "application/vnd.github.v3+json",
+    "Content-Type": "application/json",
+  };
+
+  try {
+    let url = "https://api.github.com/gists";
+    let method = "POST";
+
+    if (gistId) {
+      url = `https://api.github.com/gists/${gistId}`;
+      method = "PATCH";
+    }
+
+    const body = JSON.stringify({
+      description: "Swing Trading App Data Backup",
+      public: false,
+      files: { [filename]: { content: content } }
+    });
+
+    const response = await fetch(url, { method, headers, body });
+    if (!response.ok) throw new Error(`GitHub API Error: ${response.status}`);
+    return (await response.json()).id; 
+  } catch (error) {
+    console.error("GitHub Sync Error:", error);
+    throw error;
+  }
+}
+
+async function loadFromGist(token, gistId) {
+  if (!gistId) throw new Error("No Gist ID provided");
+  const headers = {
+    "Authorization": `token ${token}`,
+    "Accept": "application/vnd.github.v3+json",
+  };
+  try {
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
+    if (!response.ok) throw new Error(`GitHub API Error: ${response.status}`);
+    const result = await response.json();
+    const filename = "swing_trades_data.json";
+    if (result.files && result.files[filename]) return JSON.parse(result.files[filename].content);
+    throw new Error("Data file not found");
+  } catch (error) {
+    console.error("GitHub Load Error:", error);
+    throw error;
+  }
+}
+
+// --- Translations ---
+const translations = {
+  zh: {
+    appTitle: "SwingMaster Pro",
+    nav: {
+      dashboard: "仪表盘",
+      monitor: "监控与预警", 
+      calculator: "新交易",
+      journal: "交易日志",
+      settings: "设置"
+    },
+    dashboard: {
+      aiTitle: "AI 绩效教练",
+      aiButton: "生成诊断报告",
+      aiButtonAnalyzing: "正在分析...",
+      aiPlaceholder: "点击按钮，让 AI 基于你的历史交易数据给出个性化建议。",
+      aiEmpty: "请先完成至少一笔交易，AI 才能分析数据。",
+      netPnL: "净盈亏 (Net PnL)",
+      winRate: "胜率 (Win Rate)",
+      totalTrades: "总交易数",
+      avgWinLoss: "平均盈利 vs 亏损",
+      avgSubtext: "盈亏比关键指标",
+      chartCumulative: "资金累计曲线",
+      chartDistribution: "盈亏分布",
+      clearData: "清除所有数据",
+      clearConfirm: "警告：這將清空所有數據！确定吗？"
+    },
+    monitor: { 
+      title: "持仓监控与预警",
+      refreshBtn: "一键联网更新",
+      refreshing: "搜索最新数据...",
+      lastUpdated: "上次更新:",
+      noOpenTrades: "当前没有相关交易。",
+      filterOpen: "仅持仓",
+      filterAll: "所有历史",
+      table: {
+        ticker: "代码",
+        entry: "进场价",
+        current: "最新价 (预估)",
+        change: "浮动盈亏",
+        alerts: "智能预警",
+        news: "最新资讯摘要"
+      },
+      alerts: {
+        stopHit: "⚠️ 跌破止损！",
+        nearStop: "📉 接近止损风险",
+        takeProfit: "🎉 盈利 > 2R",
+        safe: "✅ 运行良好",
+        closed: "🔒 已平仓记录"
+      },
+      automationNote: "自动更新：开启网页即更新，及每天 00:00, 06:00, 12:00, 18:00 (需保持网页打开)。"
+    },
+    calculator: {
+      title: "交易规划",
+      ticker: "股票代码",
+      risk: "单笔最大风险 ($)",
+      entry: "计划买入价",
+      stop: "止损价",
+      setup: "策略类型",
+      notes: "交易笔记 / 理由",
+      notesPlaceholder: "为什么这笔交易有效？图表形态如何？",
+      aiButton: "AI 风险评估",
+      aiButtonAnalyzing: "AI 正在思考...",
+      aiTitle: "AI 评估意见:",
+      strategyTip: "策略锦囊",
+      strategyTipTitle: "AI 策略助手",
+      checklistTitle: "执行前检查",
+      checklist: {
+        market: "A. 市场环境: 大盘在50日均线上方 & 无暴跌",
+        stock: "B. 选股标准: 市值>$1B, 成交量>1M, 价格>$10",
+        chart: "C. 图表结构: 包含盘整区且成交量收缩 (VCP)"
+      },
+      results: {
+        title: "仓位计算结果",
+        shares: "建议股数",
+        riskPerShare: "单股风险",
+        capital: "预计资金占用",
+        totalRisk: "总风险金额",
+        commit: "执行并记录",
+        error: "请输入有效的进场价和止损价"
+      },
+      alert: "请先输入有效的股票代码、入场价和止损价。"
+    },
+    journal: {
+      title: "交易记录",
+      headers: {
+        date: "日期",
+        ticker: "代码",
+        setup: "策略",
+        entry: "进场",
+        stop: "止损",
+        shares: "股数",
+        risk: "风险",
+        status: "状态",
+        pnl: "盈亏",
+        rMultiple: "R倍数",
+        actions: "操作"
+      },
+      status: {
+        holding: "持仓",
+        closed: "平仓"
+      },
+      empty: "暂无交易记录。去 \"新交易\" 页面添加第一笔交易吧！",
+      deleteConfirm: "确定要删除这条交易记录吗？",
+      aiPostMortem: "AI 复盘",
+      aiPostMortemTitle: "单笔交易 AI 复盘",
+      aiPostMortemLoading: "AI 正在回顾这笔交易...",
+      closeModal: "关闭"
+    },
+    settings: {
+      title: "数据同步与设置",
+      githubTitle: "GitHub Gist 同步",
+      githubDesc: "将你的交易数据备份到 GitHub Gist。",
+      tokenLabel: "GitHub Personal Access Token (PAT)",
+      tokenPlaceholder: "输入 Token (需要 'gist' 权限)",
+      gistIdLabel: "Gist ID",
+      gistIdPlaceholder: "初次上传留空",
+      saveBtn: "上传到 GitHub",
+      loadBtn: "从 GitHub 下载",
+      saving: "上传中...",
+      loading: "下载中...",
+      successUpload: "上传成功！",
+      successLoad: "下载成功！",
+      error: "操作失败",
+      tokenHelp: "去 GitHub Settings -> Developer settings -> Tokens (Classic) 获取。",
+      warning: "Token 仅保存在本地。",
+      demoDataBtnPharma: "加载演示数据 (AI制药)",
+      demoDataDescPharma: "加载20条 AI Pharma 虚拟交易记录。",
+      demoDataBtnMining: "加载演示数据 (矿业)",
+      demoDataDescMining: "加载20条美国矿业/矿物处理虚拟交易记录。",
+      demoConfirm: "这将覆盖现有数据！确定吗？"
+    }
+  },
+  en: {
+    appTitle: "SwingMaster Pro",
+    nav: {
+      dashboard: "Dashboard",
+      monitor: "Monitor",
+      calculator: "New Trade",
+      journal: "Trade Log",
+      settings: "Settings"
+    },
+    dashboard: {
+      aiTitle: "AI Performance Coach",
+      aiButton: "Generate Diagnosis",
+      aiButtonAnalyzing: "Analyzing...",
+      aiPlaceholder: "Click for AI analysis.",
+      aiEmpty: "Complete a trade first.",
+      netPnL: "Net PnL",
+      winRate: "Win Rate",
+      totalTrades: "Total Trades",
+      avgWinLoss: "Avg Win vs Loss",
+      avgSubtext: "Risk/Reward Metric",
+      chartCumulative: "Cumulative PnL",
+      chartDistribution: "PnL Distribution",
+      clearData: "Clear Data",
+      clearConfirm: "Warning: Clear all data?"
+    },
+    monitor: { 
+      title: "Portfolio Monitor & Alerts",
+      refreshBtn: "Refresh (AI Search)",
+      refreshing: "Searching...",
+      lastUpdated: "Last Updated:",
+      noOpenTrades: "No relevant trades found.",
+      filterOpen: "Open Only",
+      filterAll: "All History",
+      table: {
+        ticker: "Ticker",
+        entry: "Entry",
+        current: "Price (Est.)",
+        change: "Unrealized PnL",
+        alerts: "Smart Alerts",
+        news: "Latest News"
+      },
+      alerts: {
+        stopHit: "⚠️ Stop Loss Hit!",
+        nearStop: "📉 Near Stop Loss",
+        takeProfit: "🎉 > 2R Profit",
+        safe: "✅ Healthy",
+        closed: "🔒 Closed Record"
+      },
+      automationNote: "Auto-refresh: On load & daily at 00:00, 06:00, 12:00, 18:00 (Keep tab open)."
+    },
+    calculator: {
+      title: "Plan Trade",
+      ticker: "Ticker",
+      risk: "Max Risk ($)",
+      entry: "Entry Price",
+      stop: "Stop Loss",
+      setup: "Setup Type",
+      notes: "Notes",
+      notesPlaceholder: "Rationale?",
+      aiButton: "Critique Plan",
+      aiButtonAnalyzing: "Thinking...",
+      aiTitle: "AI Critique:",
+      strategyTip: "Strategy Tip",
+      strategyTipTitle: "AI Strategy Assistant",
+      checklistTitle: "Pre-Flight Checklist",
+      checklist: {
+        market: "A. Market Context",
+        stock: "B. Eligibility",
+        chart: "C. Structure (VCP)"
+      },
+      results: {
+        title: "Results",
+        shares: "Shares",
+        riskPerShare: "Risk/Share",
+        capital: "Capital",
+        totalRisk: "Total Risk",
+        commit: "Commit Trade",
+        error: "Enter valid prices"
+      },
+      alert: "Enter valid details."
+    },
+    journal: {
+      title: "Trade Log",
+      headers: {
+        date: "Date",
+        ticker: "Ticker",
+        setup: "Setup",
+        entry: "Entry",
+        stop: "Stop",
+        shares: "Shares",
+        risk: "Risk",
+        status: "Status",
+        pnl: "PnL",
+        rMultiple: "R",
+        actions: "Actions"
+      },
+      status: {
+        holding: "Open",
+        closed: "Closed"
+      },
+      empty: "No trades yet.",
+      deleteConfirm: "Delete this trade?",
+      aiPostMortem: "Post-Mortem",
+      aiPostMortemTitle: "AI Review",
+      aiPostMortemLoading: "Reviewing...",
+      closeModal: "Close"
+    },
+    settings: {
+      title: "Settings",
+      githubTitle: "GitHub Sync",
+      githubDesc: "Backup to GitHub Gist.",
+      tokenLabel: "GitHub Token",
+      tokenPlaceholder: "Enter Token",
+      gistIdLabel: "Gist ID",
+      gistIdPlaceholder: "Empty if new",
+      saveBtn: "Upload",
+      loadBtn: "Download",
+      saving: "Uploading...",
+      loading: "Downloading...",
+      successUpload: "Success!",
+      successLoad: "Success!",
+      error: "Failed",
+      tokenHelp: "Get token from GitHub Developer Settings.",
+      warning: "Token stored locally.",
+      demoDataBtnPharma: "Load Demo Data (AI Pharma)",
+      demoDataDescPharma: "Load 20 dummy AI Pharma trades.",
+      demoDataBtnMining: "Load Demo Data (Mining)",
+      demoDataDescMining: "Load 20 dummy Mining trades.",
+      demoConfirm: "Overwrite data?"
+    }
+  }
+};
+
+// --- Modal Component ---
+function Modal({ isOpen, onClose, title, children, isLoading }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto transform transition-all scale-100 border border-slate-200 flex flex-col">
+        <div className="sticky top-0 bg-white border-b border-slate-100 p-4 flex justify-between items-center z-10 shrink-0">
+          <h3 className="text-lg font-bold text-slate-800 flex items-center">
+            <Sparkles size={18} className="text-indigo-600 mr-2" />
+            {title}
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+            <X size={20} className="text-slate-500" />
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto flex-grow">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <Loader2 size={32} className="text-indigo-600 animate-spin" />
+              <p className="text-slate-500 animate-pulse">AI is thinking...</p>
+            </div>
+          ) : (
+            children
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- 组件：主应用 ---
+export default function SwingTradingApp() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [language, setLanguage] = useState('zh'); 
+  const [trades, setTrades] = useState(() => {
+    const saved = localStorage.getItem('swing_trades_db');
+    return (saved && JSON.parse(saved).length > 0) ? JSON.parse(saved) : generatePharmaDummyData();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('swing_trades_db', JSON.stringify(trades));
+  }, [trades]);
+
+  const addTrade = (trade) => {
+    setTrades([trade, ...trades]);
+    setActiveTab('journal');
+  };
+
+  const updateTrade = (id, updatedData) => {
+    setTrades(trades.map(t => t.id === id ? { ...t, ...updatedData } : t));
+  };
+
+  const deleteTrade = (id) => {
+    const t = translations[language].journal;
+    if (confirm(t.deleteConfirm)) {
+      setTrades(trades.filter(t => t.id !== id));
+    }
+  };
+
+  const clearData = () => {
+    const t = translations[language].dashboard;
+    if (confirm(t.clearConfirm)) {
+      setTrades([]);
+    }
+  };
+
+  const handleTradesLoaded = (newTrades) => {
+    setTrades(newTrades);
+    alert(translations[language].settings.successLoad);
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'zh' ? 'en' : 'zh');
+  };
+
+  const t = translations[language];
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+      {/* 顶部导航 */}
+      <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-2 overflow-hidden">
+              <TrendingUp className="h-6 w-6 text-emerald-400 flex-shrink-0" />
+              <span className="font-bold text-xl tracking-tight truncate hidden sm:inline">{t.appTitle}</span>
+            </div>
+            <div className="flex space-x-1 items-center overflow-x-auto no-scrollbar">
+              <NavButton 
+                active={activeTab === 'dashboard'} 
+                onClick={() => setActiveTab('dashboard')} 
+                icon={<LayoutDashboard size={18} />} 
+                label={t.nav.dashboard} 
+              />
+              <NavButton 
+                active={activeTab === 'monitor'} 
+                onClick={() => setActiveTab('monitor')} 
+                icon={<Bell size={18} />} 
+                label={t.nav.monitor} 
+              />
+              <NavButton 
+                active={activeTab === 'calculator'} 
+                onClick={() => setActiveTab('calculator')} 
+                icon={<Calculator size={18} />} 
+                label={t.nav.calculator} 
+              />
+              <NavButton 
+                active={activeTab === 'journal'} 
+                onClick={() => setActiveTab('journal')} 
+                icon={<History size={18} />} 
+                label={t.nav.journal} 
+              />
+               <NavButton 
+                active={activeTab === 'settings'} 
+                onClick={() => setActiveTab('settings')} 
+                icon={<Settings size={18} />} 
+                label={t.nav.settings} 
+              />
+              <button 
+                onClick={toggleLanguage}
+                className="ml-2 p-2 rounded-full hover:bg-slate-700 text-slate-300 hover:text-white transition-colors border border-slate-700 flex-shrink-0"
+              >
+                <div className="flex items-center space-x-1 text-xs font-bold">
+                   <Globe size={16} />
+                   <span>{language === 'zh' ? 'EN' : '中'}</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {activeTab === 'dashboard' && <Dashboard trades={trades} clearData={clearData} language={language} />}
+        {activeTab === 'monitor' && <MarketMonitor trades={trades} language={language} />}
+        {activeTab === 'calculator' && <TradeCalculator onSave={addTrade} language={language} />}
+        {activeTab === 'journal' && <TradeJournal trades={trades} onUpdate={updateTrade} onDelete={deleteTrade} language={language} />}
+        {activeTab === 'settings' && <SettingsView trades={trades} onTradesLoaded={handleTradesLoaded} language={language} />}
+      </main>
+    </div>
+  );
+}
+
+function NavButton({ active, onClick, icon, label }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200 flex-shrink-0 ${
+        active 
+          ? 'bg-slate-700 text-white shadow-md' 
+          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+      }`}
+    >
+      {icon}
+      <span className="hidden md:inline font-medium text-sm">{label}</span>
+    </button>
+  );
+}
+
+// --- Market Monitor Component (Modified: Removed Reporting) ---
+function MarketMonitor({ trades, language }) {
+  const [marketData, setMarketData] = useState({});
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState('open'); // 'open' or 'all'
+  
+  const t = translations[language].monitor;
+  
+  // Filter based on viewMode
+  const displayTrades = useMemo(() => {
+    return viewMode === 'all' ? trades : trades.filter(t => t.status === 'Open');
+  }, [trades, viewMode]);
+
+  const handleRefresh = useCallback(async () => {
+    // Only refresh if there are open trades to check
+    const tradesToRefresh = viewMode === 'all' ? trades : trades.filter(t => t.status === 'Open');
+    if (tradesToRefresh.length === 0) return;
+    
+    setIsRefreshing(true);
+
+    const tickers = [...new Set(tradesToRefresh.map(t => t.ticker))].join(', ');
+    
+    const langInstruction = language === 'zh' ? 'Please ensure news summaries are in Chinese.' : 'Please ensure news summaries are in English.';
+    const prompt = `
+      You are a financial data API. 
+      For these US Stocks: [${tickers}].
+      Find the *latest* real-time stock price (in USD) and ONE very short news headline (max 10 words).
+      ${langInstruction}
+      
+      Return ONLY a raw JSON object (no markdown, no code blocks) in this exact format:
+      {
+        "TICKER": { "price": 150.25, "news": "Earnings beat expectations." },
+        "TICKER2": { "price": 20.50, "news": "New product launch delayed." }
+      }
+    `;
+
+    try {
+      const resultText = await callGemini(prompt, true);
+      const cleanJson = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsedData = JSON.parse(cleanJson);
+      
+      setMarketData(parsedData);
+      setLastUpdated(new Date());
+    } catch (e) {
+      console.error("Failed to parse market data", e);
+      // Fail silently for auto-refresh, alerting might be annoying if recurring
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [trades, viewMode, language]);
+
+  // Refresh on component mount (Page Open)
+  useEffect(() => {
+    handleRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-refresh Scheduler
+  useEffect(() => {
+    const checkTimeAndRefresh = () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      
+      // Schedule: 0:00, 6:00, 12:00, 18:00
+      const isScheduledTime = [0, 6, 12, 18].includes(hours) && minutes === 0;
+      
+      // Check if we already updated in this specific minute to prevent loops
+      let alreadyRunThisMinute = false;
+      if (lastUpdated) {
+         const lastRun = new Date(lastUpdated);
+         alreadyRunThisMinute = lastRun.getHours() === hours && lastRun.getMinutes() === minutes && lastRun.getDate() === now.getDate();
+      }
+
+      if (isScheduledTime && !isRefreshing && !alreadyRunThisMinute) {
+        console.log("Triggering auto-refresh...");
+        handleRefresh();
+      }
+    };
+
+    // Check every 10 seconds
+    const intervalId = setInterval(checkTimeAndRefresh, 10000); 
+    
+    return () => clearInterval(intervalId);
+  }, [isRefreshing, lastUpdated, handleRefresh]);
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+       <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 md:space-y-0">
+         <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 flex items-center">
+                <Bell className="mr-2 text-blue-600" /> {t.title}
+              </h2>
+              {lastUpdated && (
+                <p className="text-xs text-slate-400 mt-1">
+                  {t.lastUpdated} {lastUpdated.toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+            
+            {/* Filter Toggle */}
+            <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg">
+              <button 
+                onClick={() => setViewMode('open')} 
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  viewMode === 'open' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {t.filterOpen}
+              </button>
+              <button 
+                onClick={() => setViewMode('all')} 
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  viewMode === 'all' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {t.filterAll}
+              </button>
+            </div>
+         </div>
+
+         <div className="flex space-x-2 w-full md:w-auto">
+            <button 
+              onClick={handleRefresh} 
+              disabled={isRefreshing || displayTrades.length === 0}
+              className="flex-1 md:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center shadow-md disabled:opacity-50 transition-all justify-center w-full"
+            >
+              {isRefreshing ? <Loader2 className="animate-spin mr-2" /> : <RefreshCw className="mr-2" />}
+              {isRefreshing ? t.refreshing : t.refreshBtn}
+            </button>
+         </div>
+       </div>
+       
+       <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 bg-slate-50 p-2 rounded">
+          <Clock size={14} className="text-blue-400" />
+          <span>{t.automationNote}</span>
+       </div>
+
+       {displayTrades.length === 0 ? (
+         <div className="text-center py-12 text-slate-400 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200">
+           {t.noOpenTrades}
+         </div>
+       ) : (
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {displayTrades.map(trade => {
+             const data = marketData[trade.ticker] || {};
+             const currentPrice = data.price || 0;
+             const entry = trade.entry;
+             const stop = trade.stop;
+             const isClosed = trade.status === 'Closed';
+             
+             // Calculate metrics
+             const isLong = entry > stop;
+             const riskPerShare = Math.abs(entry - stop);
+             
+             let unrealizedPnL = 0;
+             let rMultiple = 0;
+             
+             if (currentPrice > 0) {
+                unrealizedPnL = isLong 
+                  ? (currentPrice - entry) * trade.shares 
+                  : (entry - currentPrice) * trade.shares;
+                rMultiple = unrealizedPnL / trade.riskAmount;
+             }
+
+             // Alert Logic
+             let alertStatus = null;
+             let alertColor = "bg-white border-slate-200";
+
+             if (isClosed) {
+                alertStatus = { msg: t.alerts.closed, icon: <CheckCircle2 className="text-slate-400" />, type: 'neutral' };
+                alertColor = "bg-slate-50 border-slate-200 opacity-75";
+             } else if (currentPrice > 0) {
+               if (isLong && currentPrice <= stop) {
+                  alertStatus = { msg: t.alerts.stopHit, icon: <XCircle className="text-rose-600" />, type: 'danger' };
+                  alertColor = "bg-rose-50 border-rose-200";
+               } else if (isLong && currentPrice <= stop + (riskPerShare * 0.2)) {
+                  alertStatus = { msg: t.alerts.nearStop, icon: <AlertTriangle className="text-amber-500" />, type: 'warning' };
+                  alertColor = "bg-amber-50 border-amber-200";
+               } else if (rMultiple >= 2) {
+                  alertStatus = { msg: t.alerts.takeProfit, icon: <CheckCircle2 className="text-emerald-600" />, type: 'success' };
+                  alertColor = "bg-emerald-50 border-emerald-200";
+               } else {
+                  alertStatus = { msg: t.alerts.safe, icon: <CheckCircle2 className="text-slate-400" />, type: 'neutral' };
+               }
+             }
+
+             return (
+               <div key={trade.id} className={`p-5 rounded-xl border shadow-sm transition-all hover:shadow-md ${alertColor}`}>
+                 <div className="flex justify-between items-start mb-4">
+                   <div>
+                     <h3 className="text-2xl font-bold text-slate-800 flex items-center">
+                       {trade.ticker}
+                       {isClosed && <span className="ml-2 px-2 py-0.5 text-[10px] bg-slate-300 text-slate-600 rounded-full font-normal">CLOSED</span>}
+                     </h3>
+                     <span className="text-xs font-mono bg-slate-200 px-2 py-0.5 rounded text-slate-600">{trade.setup}</span>
+                   </div>
+                   <div className="text-right">
+                      {currentPrice > 0 ? (
+                        <div className={`text-xl font-bold font-mono ${unrealizedPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {unrealizedPnL >= 0 ? '+' : ''}{unrealizedPnL.toFixed(0)}
+                        </div>
+                      ) : <span className="text-slate-400">--</span>}
+                      {currentPrice > 0 && (
+                        <div className="text-xs font-bold text-slate-500">{rMultiple.toFixed(1)}R</div>
+                      )}
+                   </div>
+                 </div>
+
+                 {alertStatus && (
+                    <div className="flex items-center space-x-2 mb-4 p-2 bg-white/60 rounded-lg">
+                      {alertStatus.icon}
+                      <span className={`text-sm font-bold ${
+                        alertStatus.type === 'danger' ? 'text-rose-700' : 
+                        alertStatus.type === 'warning' ? 'text-amber-700' :
+                        alertStatus.type === 'success' ? 'text-emerald-700' : 'text-slate-500'
+                      }`}>
+                        {alertStatus.msg}
+                      </span>
+                    </div>
+                 )}
+
+                 <div className="space-y-2 text-sm text-slate-600 mb-4">
+                   <div className="flex justify-between">
+                     <span>{t.table.entry}</span>
+                     <span className="font-mono">{entry}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-rose-500 font-medium">Stop</span>
+                     <span className="font-mono text-rose-500">{stop}</span>
+                   </div>
+                   <div className="flex justify-between border-t border-slate-300/50 pt-2 mt-2">
+                     <span className="font-bold">{t.table.current}</span>
+                     <span className="font-mono font-bold text-lg">
+                       {currentPrice > 0 ? currentPrice : <Loader2 size={14} className="animate-spin inline" />}
+                     </span>
+                   </div>
+                 </div>
+
+                 {data.news && (
+                   <div className="mt-4 pt-3 border-t border-slate-200">
+                     <div className="flex items-start space-x-2">
+                       <Newspaper size={14} className="text-slate-400 mt-1 flex-shrink-0" />
+                       <p className="text-xs text-slate-500 italic leading-snug">
+                         "{data.news}"
+                       </p>
+                     </div>
+                   </div>
+                 )}
+               </div>
+             );
+           })}
+         </div>
+       )}
+    </div>
+  );
+}
+
+// --- Dashboard Component (Unchanged mostly) ---
+function Dashboard({ trades, clearData, language }) {
+  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const t = translations[language].dashboard;
+
+  const stats = useMemo(() => {
+    const closedTrades = trades.filter(t => t.status === 'Closed');
+    const wins = closedTrades.filter(t => t.pnl > 0);
+    const losses = closedTrades.filter(t => t.pnl < 0);
+    const totalPnL = closedTrades.reduce((acc, t) => acc + (parseFloat(t.pnl) || 0), 0);
+    
+    let cumulative = 0;
+    const chartData = closedTrades
+      .slice()
+      .reverse()
+      .map((t, index) => {
+        cumulative += parseFloat(t.pnl) || 0;
+        return { name: index + 1, pnl: cumulative, tradePnl: t.pnl };
+      });
+
+    return {
+      totalTrades: closedTrades.length,
+      winRate: closedTrades.length > 0 ? ((wins.length / closedTrades.length) * 100).toFixed(1) : 0,
+      totalPnL: totalPnL.toFixed(2),
+      avgWin: wins.length > 0 ? (wins.reduce((acc, t) => acc + t.pnl, 0) / wins.length).toFixed(2) : 0,
+      avgLoss: losses.length > 0 ? (losses.reduce((acc, t) => acc + t.pnl, 0) / losses.length).toFixed(2) : 0,
+      chartData,
+      closedTrades 
+    };
+  }, [trades]);
+
+  const handleAiAnalysis = async () => {
+    if (stats.closedTrades.length === 0) {
+      setAiAnalysis(t.aiEmpty);
+      return;
+    }
+    setIsAnalyzing(true);
+    setAiAnalysis("");
+    
+    const tradeSummary = JSON.stringify(stats.closedTrades.map(t => ({
+      ticker: t.ticker, setup: t.setup, pnl: t.pnl, rMultiple: t.rMultiple
+    })));
+
+    const langPrompt = language === 'zh' ? "请用中文回答，语气专业且鼓励。" : "Please answer in English, be professional and encouraging.";
+    const prompt = `Act as a professional Swing Trading Coach. Analyze: ${tradeSummary}. Win Rate: ${stats.winRate}%, PnL: $${stats.totalPnL}. Provide 1 Strength, 1 Weakness, 1 Advice. ${langPrompt}`;
+
+    const result = await callGemini(prompt);
+    setAiAnalysis(result);
+    setIsAnalyzing(false);
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-lg font-bold text-indigo-900 flex items-center"><Sparkles className="mr-2 text-indigo-600" size={20} />{t.aiTitle}</h3>
+          <button onClick={handleAiAnalysis} disabled={isAnalyzing} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium flex items-center shadow-sm disabled:opacity-50">
+            {isAnalyzing ? <Loader2 className="animate-spin mr-2" size={16}/> : <Sparkles className="mr-2" size={16}/>}{isAnalyzing ? t.aiButtonAnalyzing : t.aiButton}
+          </button>
+        </div>
+        {aiAnalysis ? <div className="prose prose-sm max-w-none text-slate-700 bg-white/80 p-4 rounded-lg border border-indigo-100"><pre className="whitespace-pre-wrap font-sans text-sm">{aiAnalysis}</pre></div> : <p className="text-sm text-indigo-400 italic">{t.aiPlaceholder}</p>}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatCard title={t.netPnL} value={`$${stats.totalPnL}`} color={stats.totalPnL >= 0 ? "text-emerald-600" : "text-rose-600"} icon={<TrendingUp />} />
+        <StatCard title={t.winRate} value={`${stats.winRate}%`} color="text-blue-600" icon={<CheckCircle2 />} />
+        <StatCard title={t.totalTrades} value={stats.totalTrades} color="text-slate-600" icon={<History />} />
+        <StatCard title={t.avgWinLoss} value={`$${stats.avgWin} / $${stats.avgLoss}`} color="text-slate-600" subtext={t.avgSubtext} />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 className="text-lg font-bold text-slate-800 mb-4">{t.chartCumulative}</h3>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={stats.chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip contentStyle={{ backgroundColor: '#1e293b', color: '#fff', borderRadius: '8px', border: 'none' }} itemStyle={{ color: '#fff' }} />
+                <Line type="monotone" dataKey="pnl" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 className="text-lg font-bold text-slate-800 mb-4">{t.chartDistribution}</h3>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis hide />
+                <YAxis />
+                <Tooltip cursor={{fill: '#f1f5f9'}} />
+                <Bar dataKey="tradePnl">
+                  {stats.chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.tradePnl > 0 ? '#10b981' : entry.tradePnl < 0 ? '#f43f5e' : '#94a3b8'} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-end pt-4">
+        <button onClick={clearData} className="text-sm text-slate-400 hover:text-rose-500 flex items-center space-x-1"><Trash2 size={14} /> <span>{t.clearData}</span></button>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ title, value, color, icon, subtext }) {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{title}</p>
+          <p className={`text-2xl font-bold mt-2 ${color}`}>{value}</p>
+          {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
+        </div>
+        {icon && <div className={`p-2 rounded-lg bg-slate-100 ${color.replace('text', 'bg').replace('600', '100')}`}>{icon}</div>}
+      </div>
+    </div>
+  );
+}
+
+// --- TradeCalculator, TradeJournal, SettingsView unchanged but included for completeness ---
+function TradeCalculator({ onSave, language }) {
+  const t = translations[language].calculator;
+  const [formData, setFormData] = useState({
+    ticker: '', riskAmount: 500, entryPrice: '', stopLoss: '', setupType: 'Trend Continuation Breakout', notes: '', checklist: { marketContext: false, stockEligibility: false, chartStructure: false }
+  });
+  const [calculations, setCalculations] = useState({ shares: 0, riskPerShare: 0, capitalUsed: 0, isValid: false });
+  const [aiCritique, setAiCritique] = useState("");
+  const [isCritiquing, setIsCritiquing] = useState(false);
+  const [showStrategyTip, setShowStrategyTip] = useState(false);
+  const [strategyTipContent, setStrategyTipContent] = useState("");
+  const [isGettingTip, setIsGettingTip] = useState(false);
+
+  useEffect(() => {
+    const entry = parseFloat(formData.entryPrice), stop = parseFloat(formData.stopLoss), risk = parseFloat(formData.riskAmount);
+    if (entry > 0 && stop > 0 && entry !== stop) {
+      const riskPerShare = Math.abs(entry - stop), shares = Math.floor(risk / riskPerShare), capitalUsed = shares * entry;
+      setCalculations({ shares, riskPerShare: riskPerShare.toFixed(2), capitalUsed: capitalUsed.toFixed(2), isValid: true });
+    } else {
+      setCalculations({ shares: 0, riskPerShare: 0, capitalUsed: 0, isValid: false });
+    }
+  }, [formData.entryPrice, formData.stopLoss, formData.riskAmount]);
+
+  const handleStrategyTip = async () => {
+    setShowStrategyTip(true);
+    if (strategyTipContent) return;
+    setIsGettingTip(true);
+    const langPrompt = language === 'zh' ? "请用中文简短回答" : "Please briefly answer in English";
+    const prompt = `I am a Swing Trader using strategy: "${formData.setupType}". ${langPrompt}. Provide 3 key bullet points on chart features.`;
+    const result = await callGemini(prompt);
+    setStrategyTipContent(result);
+    setIsGettingTip(false);
+  };
+
+  const handleAiCritique = async () => {
+    if (!calculations.isValid || !formData.ticker) { alert(t.alert); return; }
+    setIsCritiquing(true); setAiCritique("");
+    const isLong = parseFloat(formData.entryPrice) > parseFloat(formData.stopLoss);
+    const stopDistancePercent = ((Math.abs(formData.entryPrice - formData.stopLoss) / formData.entryPrice) * 100).toFixed(2);
+    const langPrompt = language === 'zh' ? "请简短地回答（中文）：" : "Please answer briefly in English:";
+    const prompt = `Critique Swing Trade Plan: Ticker: ${formData.ticker}, ${isLong?'Long':'Short'}, Setup: ${formData.setupType}, Entry: ${formData.entryPrice}, Stop: $${formData.stopLoss} (${stopDistancePercent}%), Risk: $${formData.riskAmount}. ${langPrompt} 1. Stop distance reasonable? 2. Chart features to check? 3. Hidden risks?`;
+    const result = await callGemini(prompt);
+    setAiCritique(result); setIsCritiquing(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!calculations.isValid) return;
+    const newTrade = {
+      id: Date.now(), date: new Date().toISOString().split('T')[0], ticker: formData.ticker.toUpperCase(), setup: formData.setupType, entry: parseFloat(formData.entryPrice), stop: parseFloat(formData.stopLoss), riskAmount: parseFloat(formData.riskAmount), shares: calculations.shares, capitalUsed: parseFloat(calculations.capitalUsed), status: 'Open', notes: formData.notes, exit: null, pnl: 0, rMultiple: 0
+    };
+    onSave(newTrade);
+    setFormData(prev => ({ ...prev, ticker: '', entryPrice: '', stopLoss: '', notes: '', checklist: { marketContext: false, stockEligibility: false, chartStructure: false } }));
+    setAiCritique(""); setStrategyTipContent(""); setShowStrategyTip(false);
+  };
+
+  const toggleCheck = (key) => setFormData(prev => ({ ...prev, checklist: { ...prev.checklist, [key]: !prev.checklist[key] } }));
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+      <Modal isOpen={showStrategyTip} onClose={() => setShowStrategyTip(false)} title={t.strategyTipTitle} isLoading={isGettingTip}><div className="prose prose-sm text-slate-700"><h4 className="font-bold text-indigo-600 mb-2">{formData.setupType}</h4><pre className="whitespace-pre-wrap font-sans">{strategyTipContent}</pre></div></Modal>
+      <div className="lg:col-span-7 space-y-6">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center"><Calculator className="mr-2 text-blue-600" />{t.title}</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-sm font-medium text-slate-600 mb-1">{t.ticker}</label><input type="text" required value={formData.ticker} onChange={e => setFormData({...formData, ticker: e.target.value})} className="w-full p-2 border border-slate-300 rounded-lg uppercase font-mono" placeholder="AAPL" /></div>
+              <div><label className="block text-sm font-medium text-slate-600 mb-1">{t.risk}</label><input type="number" required value={formData.riskAmount} onChange={e => setFormData({...formData, riskAmount: e.target.value})} className="w-full p-2 border border-slate-300 rounded-lg" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-sm font-medium text-emerald-600 mb-1">{t.entry}</label><input type="number" step="0.01" required value={formData.entryPrice} onChange={e => setFormData({...formData, entryPrice: e.target.value})} className="w-full p-2 border border-emerald-200 rounded-lg bg-emerald-50" placeholder="0.00" /></div>
+              <div><label className="block text-sm font-medium text-rose-600 mb-1">{t.stop}</label><input type="number" step="0.01" required value={formData.stopLoss} onChange={e => setFormData({...formData, stopLoss: e.target.value})} className="w-full p-2 border border-rose-200 rounded-lg bg-rose-50" placeholder="0.00" /></div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1 flex justify-between"><span>{t.setup}</span><button type="button" onClick={handleStrategyTip} className="text-indigo-500 text-xs flex items-center"><Lightbulb size={12} className="mr-1" /> {t.strategyTip}</button></label>
+              <select value={formData.setupType} onChange={e => {setFormData({...formData, setupType: e.target.value}); setStrategyTipContent("");}} className="w-full p-2 border border-slate-300 rounded-lg"><option>Trend Continuation Breakout</option><option>Pullback to 20MA</option><option>Reversal</option><option>IPO Base</option></select>
+            </div>
+            <div><label className="block text-sm font-medium text-slate-600 mb-1">{t.notes}</label><textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full p-2 border border-slate-300 rounded-lg h-24" placeholder={t.notesPlaceholder}></textarea></div>
+            <div className="pt-2">
+              <button type="button" onClick={handleAiCritique} disabled={isCritiquing || !calculations.isValid} className="w-full flex justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-lg shadow-md disabled:opacity-50">{isCritiquing ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}<span>{isCritiquing ? t.aiButtonAnalyzing : t.aiButton}</span></button>
+              {aiCritique && <div className="mt-4 p-4 bg-violet-50 border border-violet-100 rounded-lg text-sm text-slate-700"><h4 className="font-bold text-violet-800 mb-2 flex items-center"><MessageSquare size={16} className="mr-2"/> {t.aiTitle}</h4><pre className="whitespace-pre-wrap font-sans">{aiCritique}</pre></div>}
+            </div>
+          </form>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+           <h3 className="text-md font-bold text-slate-800 mb-4">{t.checklistTitle}</h3>
+           <div className="space-y-3">
+             <CheckItem label={t.checklist.market} checked={formData.checklist.marketContext} onChange={() => toggleCheck('marketContext')} />
+             <CheckItem label={t.checklist.stock} checked={formData.checklist.stockEligibility} onChange={() => toggleCheck('stockEligibility')} />
+             <CheckItem label={t.checklist.chart} checked={formData.checklist.chartStructure} onChange={() => toggleCheck('chartStructure')} />
+           </div>
+        </div>
+      </div>
+      <div className="lg:col-span-5"><div className="bg-slate-800 text-white p-6 rounded-xl shadow-lg sticky top-24"><h3 className="text-lg font-medium text-slate-300 mb-6 border-b border-slate-600 pb-2">{t.results.title}</h3><div className="space-y-6"><div className="flex justify-between items-end"><span className="text-slate-400">{t.results.shares}</span><span className="text-4xl font-bold text-emerald-400 font-mono">{calculations.shares > 0 ? calculations.shares : '--'}</span></div><div className="space-y-2 pt-4"><ResultRow label={t.results.riskPerShare} value={`$${calculations.riskPerShare}`} /><ResultRow label={t.results.capital} value={`$${calculations.capitalUsed}`} /><ResultRow label={t.results.totalRisk} value={`$${formData.riskAmount}`} highlight /></div><div className="pt-6 mt-6 border-t border-slate-600"><button onClick={handleSubmit} disabled={!calculations.isValid} className={`w-full py-4 rounded-lg font-bold text-lg flex justify-center space-x-2 transition-all ${calculations.isValid ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}><Save size={20} /><span>{t.results.commit}</span></button>{!calculations.isValid && <p className="text-center text-xs text-slate-400 mt-2">{t.results.error}</p>}</div></div></div></div>
+    </div>
+  );
+}
+
+function CheckItem({ label, checked, onChange }) {
+  return <div onClick={onChange} className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${checked ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-50 border border-transparent hover:bg-slate-100'}`}><div className={`w-5 h-5 rounded-full flex justify-center items-center border ${checked ? 'bg-emerald-50 border-emerald-500' : 'border-slate-400'}`}>{checked && <CheckCircle2 size={14} className="text-white" />}</div><span className={`text-sm ${checked ? 'text-emerald-800 font-medium' : 'text-slate-600'}`}>{label}</span></div>;
+}
+
+function ResultRow({ label, value, highlight }) {
+  return <div className="flex justify-between items-center text-sm"><span className="text-slate-400">{label}</span><span className={`font-mono ${highlight ? 'text-white font-bold' : 'text-slate-200'}`}>{value}</span></div>;
+}
+
+function TradeJournal({ trades, onUpdate, onDelete, language }) {
+  const [editingId, setEditingId] = useState(null);
+  const [exitPrice, setExitPrice] = useState('');
+  const [reviewTradeId, setReviewTradeId] = useState(null);
+  const [aiReviewContent, setAiReviewContent] = useState("");
+  const [isReviewing, setIsReviewing] = useState(false);
+  const t = translations[language].journal;
+
+  const handleCloseTrade = (trade) => {
+    if (!exitPrice) return;
+    const exit = parseFloat(exitPrice);
+    const isLong = trade.entry > trade.stop;
+    const priceDiff = exit - trade.entry;
+    const pnl = isLong ? (priceDiff * trade.shares) : (-priceDiff * trade.shares);
+    const rMultiple = (pnl / trade.riskAmount).toFixed(2);
+    onUpdate(trade.id, { status: 'Closed', exit: exit, pnl: parseFloat(pnl.toFixed(2)), rMultiple: parseFloat(rMultiple) });
+    setEditingId(null); setExitPrice('');
+  };
+
+  const handleAiReview = async (trade) => {
+    setReviewTradeId(trade.id); setIsReviewing(true); setAiReviewContent("");
+    const langPrompt = language === 'zh' ? "请用中文回答" : "Please answer in English";
+    const prompt = `Strict Trading Coach review: Ticker: ${trade.ticker}, Setup: ${trade.setup}, Entry: ${trade.entry}, Stop: ${trade.stop}, Exit: ${trade.exit}, PnL: $${trade.pnl} (${trade.rMultiple}R). Notes: "${trade.notes}". ${langPrompt}. 3 bullet points on execution.`;
+    const result = await callGemini(prompt);
+    setAiReviewContent(result); setIsReviewing(false);
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <Modal isOpen={!!reviewTradeId} onClose={() => setReviewTradeId(null)} title={t.aiPostMortemTitle} isLoading={isReviewing}><div className="prose prose-sm text-slate-700">{trades.find(t => t.id === reviewTradeId) && <div className="mb-4 p-3 bg-slate-50 rounded-lg text-xs font-mono">{trades.find(t => t.id === reviewTradeId).ticker} | {trades.find(t => t.id === reviewTradeId).rMultiple}R</div>}<pre className="whitespace-pre-wrap font-sans">{aiReviewContent}</pre></div></Modal>
+      <h2 className="text-xl font-bold text-slate-800 flex items-center"><History className="mr-2 text-blue-600" /> {t.title}</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"><div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200"><tr><th className="px-4 py-3">{t.headers.date}</th><th className="px-4 py-3">{t.headers.ticker}</th><th className="px-4 py-3">{t.headers.setup}</th><th className="px-4 py-3 text-right">{t.headers.entry}</th><th className="px-4 py-3 text-right">{t.headers.stop}</th><th className="px-4 py-3 text-right">{t.headers.shares}</th><th className="px-4 py-3 text-right">{t.headers.risk}</th><th className="px-4 py-3 text-center">{t.headers.status}</th><th className="px-4 py-3 text-right">{t.headers.pnl}</th><th className="px-4 py-3 text-center">{t.headers.rMultiple}</th><th className="px-4 py-3 text-center">{t.headers.actions}</th></tr></thead><tbody className="divide-y divide-slate-100">{trades.length === 0 ? <tr><td colSpan="11" className="px-4 py-8 text-center text-slate-400">{t.empty}</td></tr> : trades.map(trade => (<tr key={trade.id} className="hover:bg-slate-50 transition-colors"><td className="px-4 py-3 text-slate-600">{trade.date}</td><td className="px-4 py-3 font-bold text-slate-800">{trade.ticker}</td><td className="px-4 py-3 text-slate-600"><span className="block text-xs text-slate-400">{trade.setup}</span></td><td className="px-4 py-3 text-right font-mono">${trade.entry}</td><td className="px-4 py-3 text-right font-mono text-rose-500">${trade.stop}</td><td className="px-4 py-3 text-right font-mono">{trade.shares}</td><td className="px-4 py-3 text-right font-mono">${trade.riskAmount}</td><td className="px-4 py-3 text-center">{trade.status === 'Open' ? (editingId === trade.id ? <div className="flex items-center space-x-1"><input type="number" className="w-20 p-1 border rounded text-xs" placeholder="Exit $" value={exitPrice} onChange={e => setExitPrice(e.target.value)} autoFocus /><button onClick={() => handleCloseTrade(trade)} className="text-emerald-600 hover:bg-emerald-50 p-1 rounded"><CheckCircle2 size={16}/></button><button onClick={() => setEditingId(null)} className="text-slate-400 hover:bg-slate-100 p-1 rounded"><XCircle size={16}/></button></div> : <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{t.status.holding}</span>) : <div className="flex flex-col items-center"><span className="text-xs font-mono text-slate-600">${trade.exit}</span><span className="text-[10px] text-slate-400">{t.status.closed}</span></div>}</td><td className={`px-4 py-3 text-right font-bold font-mono ${trade.pnl > 0 ? 'text-emerald-600' : trade.pnl < 0 ? 'text-rose-600' : 'text-slate-400'}`}>{trade.status === 'Closed' ? `$${trade.pnl}` : '--'}</td><td className="px-4 py-3 text-center">{trade.status === 'Closed' ? <span className={`px-2 py-1 rounded text-xs font-bold ${trade.rMultiple >= 2 ? 'bg-emerald-100 text-emerald-800' : trade.rMultiple > 0 ? 'bg-blue-50 text-blue-800' : 'bg-rose-50 text-rose-800'}`}>{trade.rMultiple}R</span> : '--'}</td><td className="px-4 py-3 text-center flex justify-center space-x-2">{trade.status === 'Open' && !editingId && <button onClick={() => setEditingId(trade.id)} title="Close" className="p-1 text-blue-500 hover:bg-blue-50 rounded"><ArrowRight size={16} /></button>}{trade.status === 'Closed' && <button onClick={() => handleAiReview(trade)} title={t.aiPostMortem} className="p-1 text-indigo-500 hover:bg-indigo-50 rounded animate-pulse hover:animate-none"><Sparkles size={16} /></button>}<button onClick={() => onDelete(trade.id)} title="Delete" className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded"><Trash2 size={16} /></button></td></tr>))}</tbody></table></div></div>
+    </div>
+  );
+}
+
+function SettingsView({ trades, onTradesLoaded, language }) {
+  const [githubToken, setGithubToken] = useState(() => localStorage.getItem('github_pat') || '');
+  const [gistId, setGistId] = useState(() => localStorage.getItem('github_gist_id') || '');
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
+  const t = translations[language].settings;
+
+  useEffect(() => { localStorage.setItem('github_pat', githubToken); }, [githubToken]);
+  useEffect(() => { localStorage.setItem('github_gist_id', gistId); }, [gistId]);
+
+  const handleSaveToGithub = async () => {
+    if (!githubToken) { alert("Please enter a GitHub Token."); return; }
+    setIsLoading(true); setStatusMsg(t.saving);
+    try {
+      const newGistId = await saveToGist(githubToken, gistId, trades);
+      setGistId(newGistId); setStatusMsg(t.successUpload);
+    } catch (error) { setStatusMsg(t.error + " " + error.message); } finally { setIsLoading(false); }
+  };
+
+  const handleLoadFromGithub = async () => {
+    if (!githubToken || !gistId) { alert("Need Token & Gist ID."); return; }
+    setIsLoading(true); setStatusMsg(t.loading);
+    try {
+      const data = await loadFromGist(githubToken, gistId);
+      onTradesLoaded(data); setStatusMsg(t.successLoad);
+    } catch (error) { setStatusMsg(t.error + " " + error.message); } finally { setIsLoading(false); }
+  };
+  
+  const loadPharmaData = () => { if (confirm(t.demoConfirm)) { onTradesLoaded(generatePharmaDummyData()); } };
+  const loadMiningData = () => { if (confirm(t.demoConfirm)) { onTradesLoaded(generateMiningDummyData()); } };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <h2 className="text-xl font-bold text-slate-800 flex items-center"><Settings className="mr-2 text-blue-600" /> {t.title}</h2>
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div className="flex items-center space-x-3 mb-6"><div className="p-3 bg-slate-900 rounded-full text-white"><Github size={24} /></div><div><h3 className="text-lg font-bold text-slate-800">{t.githubTitle}</h3><p className="text-sm text-slate-500">{t.githubDesc}</p></div></div>
+        <div className="space-y-4 max-w-2xl">
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t.tokenLabel}</label><div className="relative"><input type="password" value={githubToken} onChange={(e) => setGithubToken(e.target.value)} className="w-full p-2 pl-10 border border-slate-300 rounded-lg" placeholder={t.tokenPlaceholder} /><Key size={16} className="absolute left-3 top-3 text-slate-400" /></div><p className="text-xs text-slate-500 mt-1 flex items-center"><ExternalLink size={10} className="mr-1" />{t.tokenHelp}</p></div>
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t.gistIdLabel}</label><div className="relative"><input type="text" value={gistId} onChange={(e) => setGistId(e.target.value)} className="w-full p-2 pl-10 border border-slate-300 rounded-lg font-mono text-sm" placeholder={t.gistIdPlaceholder} /><Cloud size={16} className="absolute left-3 top-3 text-slate-400" /></div></div>
+          
+          <div className="flex space-x-4 pt-2"><button onClick={handleSaveToGithub} disabled={isLoading || !githubToken} className="flex-1 flex justify-center space-x-2 bg-slate-900 text-white py-2 px-4 rounded-lg disabled:opacity-50">{isLoading && statusMsg.includes("Uploading") ? <Loader2 className="animate-spin" size={18}/> : <Upload size={18} />}<span>{t.saveBtn}</span></button><button onClick={handleLoadFromGithub} disabled={isLoading || !githubToken || !gistId} className="flex-1 flex justify-center space-x-2 bg-white border border-slate-300 text-slate-700 py-2 px-4 rounded-lg disabled:opacity-50">{isLoading && statusMsg.includes("Downloading") ? <Loader2 className="animate-spin" size={18}/> : <Download size={18} />}<span>{t.loadBtn}</span></button></div>
+          {statusMsg && <div className={`p-3 rounded-lg text-sm flex items-center ${statusMsg.includes("Success") || statusMsg.includes("成功") ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{statusMsg}</div>}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-3 bg-violet-100 text-violet-600 rounded-full"><Sparkles size={24} /></div>
+            <div><h3 className="text-lg font-bold text-slate-800">{t.demoDataBtnPharma}</h3><p className="text-sm text-slate-500">{t.demoDataDescPharma}</p></div>
+          </div>
+          <button onClick={loadPharmaData} className="w-full flex justify-center space-x-2 bg-violet-50 text-violet-700 border border-violet-200 py-3 px-4 rounded-lg font-medium hover:bg-violet-100 transition-colors"><Sparkles size={18} /><span>{t.demoDataBtnPharma}</span></button>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-3 bg-amber-100 text-amber-600 rounded-full"><Pickaxe size={24} /></div>
+            <div><h3 className="text-lg font-bold text-slate-800">{t.demoDataBtnMining}</h3><p className="text-sm text-slate-500">{t.demoDataDescMining}</p></div>
+          </div>
+          <button onClick={loadMiningData} className="w-full flex justify-center space-x-2 bg-amber-50 text-amber-700 border border-amber-200 py-3 px-4 rounded-lg font-medium hover:bg-amber-100 transition-colors"><Pickaxe size={18} /><span>{t.demoDataBtnMining}</span></button>
+        </div>
+      </div>
+    </div>
+  );
+}
